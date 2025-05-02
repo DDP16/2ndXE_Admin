@@ -1,1 +1,87 @@
 @import "tailwindcss";
+
+@theme {
+    --color-primary: #FF5C00;
+    --color-primary-50: #ffece4;
+    --color-primary-100: #ffd0b9;
+    --color-primary-200: #ffb38d;
+    --color-primary-300: #ff9666;
+    --color-primary-400: #ff7d50;
+    --color-primary-500: #FF5C00;
+    --color-primary-600: #e55400;
+    --color-primary-700: #cf4b00;
+    --color-primary-800: #b94300;
+    --color-primary-900: #993600;
+  
+    --color-secondary: #5069f5;
+  
+    --color-secondary-50: #e9eafe;
+    --color-secondary-100: #c7cafb;
+    --color-secondary-200: #9fa8f9;
+    --color-secondary-300: #7486f7;
+    --color-secondary-400: #5069f5;
+    --color-secondary-500: #214cf0;
+    --color-secondary-600: #1c43e5;
+    --color-secondary-700: #0537d8;
+    --color-secondary-800: #002bcd;
+    --color-secondary-900: #0011b5;
+  
+    --color-compleprimary-50: #fbe8e4;
+    --color-compleprimary-100: #fccbb4;
+    --color-compleprimary-200: #f9aa83;
+    --color-compleprimary-300: #f58a50;
+    --color-compleprimary-400: #f27225;
+    --color-compleprimary-500: #ee5c00;
+    --color-compleprimary-600: #e45600;
+    --color-compleprimary-700: #d74f00;
+    --color-compleprimary-800: #c94800;
+    --color-compleprimary-900: #b13a00;
+  
+    --color-complesecond-50: #fdfee9;
+    --color-complesecond-100: #fbfac9;
+    --color-complesecond-200: #f9f6a6;
+    --color-complesecond-300: #f7f284;
+    --color-complesecond-400: #f4ee69;
+    --color-complesecond-500: #f1e951;
+    --color-complesecond-600: #f5dc50;
+    --color-complesecond-700: #f2c546;
+    --color-complesecond-800: #efae3d;
+    --color-complesecond-900: #e9892d;
+  
+    --color-ebony: #222428;
+    --color-white-smoke: #f5f5f5;
+    --color-mint-cream: #f5fffa;
+    --color-seashell: #fff5ee;
+    --color-floral-white: #fffaf0;
+    --color-snow: #fffafa;
+    --color-ghost-white: #f8f8ff;
+    --color-jet: #2a2a2a;
+    --color-raisin-black: #242124;
+    --color-oxford-blue: #212437;
+    --color-card-dark: #1f2937;
+    --color-gunmetal: #1d1f21;
+  
+    --color-bg: #f5f5f5;
+  
+    --color-amber-light: #f8d199;
+    --color-amber-dark: #d28c1a;
+    --color-coral-dark: #e64a19;
+  
+    --color-orange-50: #fff7ed;
+    --color-orange-100: #ffedd5;
+    --color-orange-200: #fed7aa;
+    --color-orange-300: #fdba74;
+    --color-orange-400: #fb923c;
+    --color-orange-500: #f97316;
+    --color-orange-600: #ea580c;
+    --color-orange-700: #c2410c;
+    --color-orange-800: #9a3412;
+    --color-orange-900: #7c2d12;
+   
+  
+    --animate-gradient: gradient 8s linear infinite;
+  
+    --animate-marquee: marquee 15s linear infinite;
+  
+    --animate-fadeIn: fadeIn 0.3s ease-out;
+}
