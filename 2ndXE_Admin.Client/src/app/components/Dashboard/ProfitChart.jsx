@@ -30,7 +30,7 @@ const ProfitChart = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="bg-white rounded-lg p-5 shadow-sm mt-6"
+      className="bg-white rounded-lg p-5 shadow-sm"
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Profit Details</h2>
