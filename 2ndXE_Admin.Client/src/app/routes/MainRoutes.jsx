@@ -9,11 +9,13 @@ import Posts from "../pages/Posts";
 import Approval from "../pages/Approval";
 import Settings from "../pages/Settings";
 import PostDetail from "../pages/PostDetail";
+import Login from "../pages/Login";
 
 export default function MainRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<Login />} />
         <Route path="/" element={<Layout />}>
           <Route path="" element={<Header />}>
             <Route index element={<Dashboard />} />

@@ -424,9 +424,6 @@ export default function Accounts() {
                     <td className="px-6 py-2 whitespace-nowrap">
                       <div className="flex space-x-2 justify-center">
                         <button className="text-gray-400 hover:text-gray-600 active:scale-70 transition-all duration-100">
-                          <Eye size={16} />
-                        </button>
-                        <button className="text-gray-400 hover:text-gray-600 active:scale-70 transition-all duration-100">
                           <Pencil size={16} />
                         </button>
                         <button className="text-gray-400 hover:text-gray-600 active:scale-70 transition-all duration-100">

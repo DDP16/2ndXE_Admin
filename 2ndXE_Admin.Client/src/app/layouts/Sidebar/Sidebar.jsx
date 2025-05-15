@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
   Users,
@@ -34,6 +34,8 @@ const SidebarItem = ({ icon: Icon, label, path, isActive = false }) => {
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
 
   const menuItems = [
     { label: "Dashboard", icon: <LayoutGrid className="w-5 h-5" />, path: "/" },
@@ -110,7 +112,9 @@ const Sidebar = () => {
           className="animate-fade-in px-4"
         >
           <div
-            onClick={() => console.log("Logout clicked")}
+            onClick={() => {
+              setShowModal(true);
+            }}
             // Add your logout logic here. For example, you might want to clear user data and redirect to login page
             // or use a logout function from your auth context or service. For now, we'll just log to the console
             // and you can replace this with your actual logout logic.
@@ -121,6 +125,28 @@ const Sidebar = () => {
           </div>
         </motion.div>
       </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/20 flex justify-center items-center z-10 transition-all duration-300">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4">Logout Confirmation</h2>
+            <p className="mb-6">Are you sure you want to logout?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:scale-105 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {navigate("/login")}}
+                className="px-4 py-2 bg-primary text-white rounded hover:scale-105 transition-all duration-200"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

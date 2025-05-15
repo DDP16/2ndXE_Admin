@@ -96,7 +96,7 @@ export default function Posts() {
 
       <div className="overflow-y-auto h-[75vh] min-h-0">
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-6 py-2"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, staggerChildren: 0.1 }}

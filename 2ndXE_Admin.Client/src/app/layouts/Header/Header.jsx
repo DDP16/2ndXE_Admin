@@ -13,7 +13,7 @@ const Header = ({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="bg-linear-to-r from-primary-400 to-white to-30% px-6 py-4 flex justify-between items-center"
+        className="bg-linear-to-r from-primary-400 to-white to-30% px-6 py-2 flex justify-between items-center"
       >
         <motion.div
           initial={{ opacity: 0 }}
@@ -25,7 +25,7 @@ const Header = ({
           Good Morning
         </motion.div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="text-right mr-2">
             <div className="text-sm font-medium">Moni Roy</div>
             <div className="text-xs text-gray-500">{userRole}</div>
@@ -33,23 +33,8 @@ const Header = ({
           <img
             src={avatar}
             alt="User Avatar"
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover"
           />
-          <button>
-            <svg
-              className="w-4 h-4 text-gray-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
         </div>
       </motion.header>
 
