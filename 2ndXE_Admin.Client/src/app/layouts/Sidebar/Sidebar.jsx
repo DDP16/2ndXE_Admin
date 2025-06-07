@@ -9,6 +9,7 @@ import {
   LogOut,
   CheckCheck,
   CreditCard,
+  Flag,
 } from "lucide-react";
 import { logout } from "../../pages/Login/services/logout";
 import { useDispatch } from "react-redux";
@@ -39,8 +40,7 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  const menuItems = [
+  const [showModal, setShowModal] = useState(false);  const menuItems = [
     { 
       label: "Dashboard", 
       icon: <LayoutGrid className="w-5 h-5" />, 
@@ -60,6 +60,11 @@ const Sidebar = () => {
       label: "Payments",
       icon: <CreditCard className="w-5 h-5" />,
       path: "/post-payment",
+    },
+    {
+      label: "Reports",
+      icon: <Flag className="w-5 h-5" />,
+      path: "/reports",
     },
   ];
 
