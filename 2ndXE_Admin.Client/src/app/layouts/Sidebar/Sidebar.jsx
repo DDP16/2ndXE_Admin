@@ -8,7 +8,10 @@ import {
   Settings,
   LogOut,
   CheckCheck,
+  CreditCard,
 } from "lucide-react";
+import { logout } from "../../pages/Login/services/logout";
+import { useDispatch } from "react-redux";
 
 const SidebarItem = ({ icon: Icon, label, path, isActive = false }) => {
   return (
@@ -33,22 +36,30 @@ const SidebarItem = ({ icon: Icon, label, path, isActive = false }) => {
 };
 
 const Sidebar = () => {
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-
   const menuItems = [
-    { label: "Dashboard", icon: <LayoutGrid className="w-5 h-5" />, path: "/" },
+    { 
+      label: "Dashboard", 
+      icon: <LayoutGrid className="w-5 h-5" />, 
+      path: "/" 
+    },
     {
       label: "Accounts",
       icon: <Users className="w-5 h-5" />,
       path: "/accounts",
     },
-    { label: "Posts", icon: <FileText className="w-5 h-5" />, path: "/posts" },
+    { 
+      label: "Posts", 
+      icon: <FileText className="w-5 h-5" />, 
+      path: "/posts" 
+    },
     {
-      label: "Approval",
-      icon: <CheckCheck className="w-5 h-5" />,
-      path: "/approval",
+      label: "Payments",
+      icon: <CreditCard className="w-5 h-5" />,
+      path: "/post-payment",
     },
   ];
 
@@ -60,6 +71,21 @@ const Sidebar = () => {
     },
     { label: "Logout", icon: <LogOut className="w-5 h-5" />, path: "/logout" },
   ];
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+
+    try {
+      const result = await dispatch(logout()).unwrap();
+      if (result.success) {
+        console.log("Logout successful");
+      }
+      navigate("/login", { replace: true });
+      setShowModal(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <motion.div
@@ -133,13 +159,13 @@ const Sidebar = () => {
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:scale-105 transition-all duration-200"
+                className="px-4 py-2 bg-gray-300 rounded hover:scale-105 transition-all duration-200 cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {navigate("/login")}}
-                className="px-4 py-2 bg-primary text-white rounded hover:scale-105 transition-all duration-200"
+                onClick={handleLogout}
+                className="px-4 py-2 bg-primary text-white rounded hover:scale-105 transition-all duration-200 cursor-pointer"
               >
                 Logout
               </button>

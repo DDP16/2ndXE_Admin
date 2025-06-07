@@ -10,110 +10,26 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { message, Spin } from "antd";
+import { fetchAllAccount, updateAccount, deleteAccount } from "../../modules/services/Account";
 import Header from "../../layouts/Header";
 
-const accountsData = [
-  {
-    id: 1,
-    name: "John Bushmill",
-    email: "John@gmail.com",
-    phone: "078 5054 8877",
-    role: "Admin",
-    verified: true,
-    created: "29 Dec 2022",
-    updated: "01 Jan 2023",
-  },
-  {
-    id: 2,
-    name: "Laura Prichet",
-    email: "laura_prichet@gmail.com",
-    phone: "215 302 3376",
-    role: "User",
-    verified: false,
-    created: "24 Dec 2022",
-    updated: "26 Dec 2022",
-  },
-  {
-    id: 3,
-    name: "Mohammad Karim",
-    email: "m_karim@gmail.com",
-    phone: "050 414 8778",
-    role: "User",
-    verified: true,
-    created: "12 Dec 2022",
-    updated: "15 Dec 2022",
-  },
-  {
-    id: 4,
-    name: "Josh Bill",
-    email: "josh_bill@gmail.com",
-    phone: "216 75 612 706",
-    role: "User",
-    verified: false,
-    created: "21 Oct 2022",
-    updated: "25 Oct 2022",
-  },
-  {
-    id: 5,
-    name: "Josh Adam",
-    email: "josh_adam@gmail.com",
-    phone: "02 75 150 655",
-    role: "Admin",
-    verified: true,
-    created: "21 Oct 2022",
-    updated: "23 Oct 2022",
-  },
-  {
-    id: 6,
-    name: "Sin Tae",
-    email: "sin_tae@gmail.com",
-    phone: "078 6013 3854",
-    role: "User",
-    verified: true,
-    created: "21 Oct 2022",
-    updated: "22 Oct 2022",
-  },
-  {
-    id: 7,
-    name: "Rajesh Masvidal",
-    email: "rajesh_m@gmail.com",
-    phone: "828 216 2190",
-    role: "User",
-    verified: false,
-    created: "19 Sep 2022",
-    updated: "20 Sep 2022",
-  },
-  {
-    id: 8,
-    name: "Fajar Surya",
-    email: "fsurya@gmail.com",
-    phone: "078 7173 9261",
-    role: "User",
-    verified: true,
-    created: "19 Sep 2022",
-    updated: "21 Sep 2022",
-  },
-  {
-    id: 9,
-    name: "Lisa Greg",
-    email: "lisa@gmail.com",
-    phone: "077 6157 4248",
-    role: "Admin",
-    verified: true,
-    created: "19 Sep 2022",
-    updated: "20 Sep 2022",
-  },
-  {
-    id: 10,
-    name: "Linda Blair",
-    email: "lindablair@gmail.com",
-    phone: "050 414 8778",
-    role: "User",
-    verified: false,
-    created: "10 Aug 2022",
-    updated: "12 Aug 2022",
-  },
-];
+// Function to format date from ISO string to DD-MM-YYYY
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+  
+  try {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "-";
+  }
+};
 
 const AccountVerifiedBadge = ({ verified }) => {
   const getVerifiedStyles = () => {
@@ -131,7 +47,8 @@ const AccountVerifiedBadge = ({ verified }) => {
     <span
       className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifiedStyles()}`}
     >
-      {verified.toString().charAt(0).toUpperCase() + verified.toString().slice(1)}
+      {verified.toString().charAt(0).toUpperCase() +
+        verified.toString().slice(1)}
     </span>
   );
 };
@@ -152,28 +69,74 @@ const AccountAvatar = ({ name }) => {
 
 export default function Accounts() {
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = React.useState(8);
+  const [itemsPerPage, setItemsPerPage] = React.useState(9);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [filterRole, setFilterRole] = useState("");
   const [filterVerified, setFilterVerified] = useState("");
+  
+  const dispatch = useDispatch();
+  const { accounts, loading, error } = useSelector((state) => state.account);
 
-  const filterAccountsData = accountsData.filter(
-    (row) =>
-      row.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (filterRole != "" ? row.role === filterRole : true) &&
-      (filterVerified != "" ? row.verified.toString() === filterVerified : true)
-    // && ((filter != "" && subfilter != "") ? (filter === 'Loại' ? row.categoryName === subfilter : row.supplierName === subfilter): true)
-  );
+  const fetchAccounts = async () => {
+    try {
+      await dispatch(fetchAllAccount()).unwrap();
+    } catch (err) {
+      message.error(
+        "Failed to fetch accounts: " + (err.message || "Unknown error")
+      );
+    }
+  };
+
+  const handleEditAccount = async (accountId, updatedData) => {
+    try {
+      await dispatch(updateAccount({ id: accountId, updatedData })).unwrap();
+      message.success("Account updated successfully!");
+      await fetchAccounts();
+    } catch (err) {
+      message.error(
+        "Failed to update account: " + (err.message || "Unknown error")
+      );
+    }
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    try {
+      await dispatch(deleteAccount(accountId)).unwrap();
+      message.success("Account deleted successfully!");
+      await fetchAccounts();
+    } catch (err) {
+      message.error(
+        "Failed to delete account: " + (err.message || "Unknown error")
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [dispatch]);
+
+  // Log whenever accounts changes
+  useEffect(() => {
+    console.log("Accounts state updated:", accounts);
+  }, [accounts]);
+
+  // Use the actual data from Supabase instead of the mock data
+  const filterAccountsData = accounts && accounts.length > 0
+    ? accounts.filter((row) =>
+        (row.full_name && row.full_name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (filterRole !== "" ? row.role === filterRole : true) &&
+        (filterVerified !== "" ? row.verified?.toString() === filterVerified : true)
+      )
+    : [];
 
   const totalItems = filterAccountsData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-
   const toggleSelectAll = () => {
-    if (selectedAccounts.length === accountsData.length) {
+    if (selectedAccounts.length === accounts.length) {
       setSelectedAccounts([]);
     } else {
-      setSelectedAccounts(accountsData.map((account) => account.id));
+      setSelectedAccounts(accounts.map((account) => account.id));
     }
   };
 
@@ -273,9 +236,7 @@ export default function Accounts() {
               size={16}
               className="text-gray-500 absolute inset-y-3 right-3 flex items-center pointer-events-none"
             />
-          </div>
-
-          <button
+          </div>          <button
             className="flex items-center py-2 text-red-500 font-medium text-sm active:scale-95 transition-all duration-100"
             onClick={() => {
               setFilterRole("");
@@ -287,17 +248,21 @@ export default function Accounts() {
         </div>
       </div>
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden max-w-[88vw]">
-        <div className="overflow-x-auto">
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Spin size="large" tip="Loading accounts..." />
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden max-w-[88vw]">
+          <div className="overflow-x-auto">
           <table className="divide-y divide-gray-200 min-w-full">
             <thead className="bg-gray-100">
-              <tr>
-                <th scope="col" className="ps-4 py-3 text-left">
+              <tr>                <th scope="col" className="ps-4 py-3 text-left">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={selectedAccounts.length === accountsData.length}
+                      checked={selectedAccounts.length === accounts.length}
                       onChange={toggleSelectAll}
                     />
                     <span className="ml-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -394,10 +359,10 @@ export default function Accounts() {
                           onChange={() => toggleSelectAccount(account.id)}
                         />
                         <div className="ml-4 flex items-center">
-                          <AccountAvatar name={account.name} />
+                          <AccountAvatar name={account.full_name} />
                           <div className="ml-3">
                             <div className="text-sm font-medium text-gray-900">
-                              {account.name}
+                              {account.full_name}
                             </div>
                             <div className="text-sm text-gray-500">
                               {account.email}
@@ -411,15 +376,14 @@ export default function Accounts() {
                     </td>
                     <td className="px-6 py-2 whitespace-nowrap text-sm text-center">
                       {account.role}
-                    </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-center">
-                      <AccountVerifiedBadge verified={account.verified} />
-                    </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
-                      {account.created}
+                    </td>                    <td className="px-6 py-2 whitespace-nowrap text-center">
+                      <AccountVerifiedBadge verified={account.is_verified} />
                     </td>
                     <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
-                      {account.updated}
+                      {formatDate(account.created_at)}
+                    </td>
+                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
+                      {formatDate(account.updated_at)}
                     </td>
                     <td className="px-6 py-2 whitespace-nowrap">
                       <div className="flex space-x-2 justify-center">
@@ -478,10 +442,10 @@ export default function Accounts() {
               }
             >
               <ChevronRight size={20} className="text-gray-600" />
-            </button>
-          </div>
+            </button>          </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
