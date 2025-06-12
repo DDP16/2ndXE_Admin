@@ -92,7 +92,7 @@ export default function PostDetail() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="p-2 md:p-4 max-w-7xl mx-auto">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -101,14 +101,14 @@ export default function PostDetail() {
         {/* Back Button */}
         <button
           onClick={() => navigate("/posts")}
-          className="flex items-center text-gray-600 hover:text-orange-500 mb-6 transition-colors"
+          className="flex items-center text-gray-600 hover:text-orange-500 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           <span>Back to Posts</span>
         </button>
 
         {/* Main Content - Grid Layout for clear separation */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-hidden h-[80vh] min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-hidden h-[90vh] min-h-0">
           {/* Left Column - Image Gallery (2/5 of the grid) */}
           <div className="lg:col-span-2 bg-white rounded-lg overflow-hidden shadow-md h-full justify-evenly flex flex-col">
             {/* Main Image */}

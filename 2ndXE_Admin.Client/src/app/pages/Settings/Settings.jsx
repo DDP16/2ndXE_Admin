@@ -1,9 +1,31 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { User, Shield, Info } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { verifyUserPassword } from "../../utils/authUtils";
+import { changeAccountPassword } from "../../modules/services/Account";
 
 export default function Settings() {
+  const dispatch = useDispatch();
+  
+  // Password state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  
+  // Password validation state
+  const [passwordErrors, setPasswordErrors] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  
+  // Password loading state
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const [userProfile, setUserProfile] = useState({
     name: "Moni Roy",
     email: "moniroy@example.com",
@@ -14,6 +36,11 @@ export default function Settings() {
     company: "2ndXE",
     location: "San Francisco, CA",
   });
+
+  const {user, isAuthenticated, error, state} = useSelector((state) => state.login);
+  useEffect(() => {
+    console.log("User data:", user);
+  },[user]);
 
   // Form state
   const [formData, setFormData] = useState({ ...userProfile });
@@ -29,12 +56,106 @@ export default function Settings() {
       [name]: value,
     }));
   };
+  // Handle password input changes
+  const handlePasswordChange = (e) => {
+    const { id, value } = e.target;
+    // Convert kebab-case IDs to camelCase state properties
+    const fieldName = id === 'current-password' ? 'currentPassword' : 
+                     id === 'new-password' ? 'newPassword' : 
+                     id === 'confirm-password' ? 'confirmPassword' : id;
+    
+    setPasswordData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+    
+    // Clear error when user starts typing
+    if (passwordErrors[fieldName]) {
+      setPasswordErrors((prev) => ({
+        ...prev,
+        [fieldName]: "",
+      }));
+    }
+  };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     setUserProfile({ ...formData });
     toast.success("Profile updated successfully!");
+  };
+  
+  // Handle password update
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    setIsChangingPassword(true);
+    
+    // Reset errors
+    setPasswordErrors({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+      try {
+      // Validate current password
+      console.log('Attempting to verify password:', passwordData.currentPassword);
+      const isCurrentPasswordValid = await verifyUserPassword(passwordData.currentPassword);
+      console.log('Password verification result:', isCurrentPasswordValid);
+      
+      if (!isCurrentPasswordValid) {
+        setPasswordErrors((prev) => ({
+          ...prev,
+          currentPassword: "Current password is incorrect",
+        }));
+        setIsChangingPassword(false);
+        return;
+      }
+      
+      // Validate new password
+      if (passwordData.newPassword.length < 8) {
+        setPasswordErrors((prev) => ({
+          ...prev,
+          newPassword: "Password must be at least 8 characters long",
+        }));
+        setIsChangingPassword(false);
+        return;
+      }
+      
+      // Validate password confirmation
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        setPasswordErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Passwords do not match",
+        }));
+        setIsChangingPassword(false);
+        return;
+      }
+      
+      // Update password in the backend
+      const userId = user?.id || localStorage.getItem("userId");
+      
+      const result = await dispatch(changeAccountPassword({
+        id: userId,
+        newPassword: passwordData.newPassword,
+      }));
+      
+      if (result.error) {
+        toast.error("Failed to update password: " + result.error.message);
+      } else {
+        toast.success("Password updated successfully!");
+        // Clear form fields
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error("An error occurred while updating password");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -266,19 +387,25 @@ export default function Settings() {
             <div className="p-6 space-y-4">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Change Password</h3>
-                <div className="space-y-3">
+                <form onSubmit={handlePasswordUpdate} className="space-y-3">
                   <div className="space-y-2">
                     <label
                       htmlFor="current-password"
                       className="block text-sm font-medium text-gray-700"
                     >
                       Current Password
-                    </label>
-                    <input
+                    </label>                    <input
                       id="current-password"
                       type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        passwordErrors.currentPassword ? "border-red-500" : "border-gray-300"
+                      }`}
                     />
+                    {passwordErrors.currentPassword && (
+                      <p className="text-sm text-red-500">{passwordErrors.currentPassword}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label
@@ -286,12 +413,18 @@ export default function Settings() {
                       className="block text-sm font-medium text-gray-700"
                     >
                       New Password
-                    </label>
-                    <input
+                    </label>                    <input
                       id="new-password"
                       type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        passwordErrors.newPassword ? "border-red-500" : "border-gray-300"
+                      }`}
                     />
+                    {passwordErrors.newPassword && (
+                      <p className="text-sm text-red-500">{passwordErrors.newPassword}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label
@@ -299,23 +432,30 @@ export default function Settings() {
                       className="block text-sm font-medium text-gray-700"
                     >
                       Confirm New Password
-                    </label>
-                    <input
+                    </label>                    <input
                       id="confirm-password"
                       type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        passwordErrors.confirmPassword ? "border-red-500" : "border-gray-300"
+                      }`}
                     />
+                    {passwordErrors.confirmPassword && (
+                      <p className="text-sm text-red-500">{passwordErrors.confirmPassword}</p>
+                    )}
                   </div>
-                </div>
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isChangingPassword}
+                    >
+                      {isChangingPassword ? "Updating..." : "Update Password"}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
-            <div className="px-6 py-4 border-t bg-gray-50 rounded-b-lg">
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
-                onClick={() => toast.success("Password updated successfully!")}
-              >
-                Update Password
-              </button>
             </div>
           </div>
         )}

@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import supabase from "../supabase";
+import { encryptPassword } from "../../utils/passwordUtils";
+import { LOCAL_PASSWORD_HASH } from "../../../settings/localVar";
 
 export const fetchAllAccount = createAsyncThunk(
     "account/fetchAllAccount", async (_, { rejectWithValue }) => {
@@ -91,6 +93,29 @@ export const deleteAccount = createAsyncThunk(
     }
 );
 
+export const changeAccountPassword = createAsyncThunk(
+    "account/changeAccountPassword", async ({ id, newPassword }, { rejectWithValue }) => {
+        try {
+            const { data, error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) throw error;
+
+            try {
+                const passwordHash = await encryptPassword(newPassword);
+                localStorage.setItem(LOCAL_PASSWORD_HASH, passwordHash);
+                console.log("Password encrypted and stored successfully");
+            } catch (encryptError) {
+                console.error("Failed to encrypt password:", encryptError);
+            }
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 const accountSlice = createSlice({
     name: "account",
     initialState: {
@@ -158,6 +183,18 @@ const accountSlice = createSlice({
                 state.accounts = state.accounts.filter(acc => acc.id !== action.payload.id);
             })
             .addCase(deleteAccount.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(changeAccountPassword.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(changeAccountPassword.fulfilled, (state, action) => {
+                state.loading = false;
+                state.account = action.payload;
+            })
+            .addCase(changeAccountPassword.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

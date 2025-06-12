@@ -4,7 +4,6 @@ import PageNotFound from "../layouts/PageNotFound";
 import Layout from "../layouts/Layout";
 import Dashboard from "../pages/Dashboard";
 import Accounts from "../pages/Accounts";
-import Header from "../layouts/Header";
 import Posts from "../pages/Posts";
 import Settings from "../pages/Settings";
 import PostDetail from "../pages/PostDetail";

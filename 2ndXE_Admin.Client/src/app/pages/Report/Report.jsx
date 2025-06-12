@@ -6,12 +6,11 @@ import {
   ChevronRight,
   Search,
   ChevronDown,
-  Eye,
-  Pencil,
-  Trash2,
+  ChevronRight as ChevronRightIcon,
+  X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { message, Spin } from "antd";
+import { message, Spin, Modal } from "antd";
 import {
   fetchAllReport,
   updateReport,
@@ -24,7 +23,7 @@ const mockReportData = [
     id: 1,
     user_id: "USER001",
     post_id: "POST001",
-    reason: "Inappropriate content",
+    reason: "Inappropriate content Inappropriate content Inappropriate content Inappropriate content Inappropriate content Inappropriate content",
     status: "pending",
     created_at: "2025-01-15T10:30:00.000Z",
   },
@@ -146,12 +145,14 @@ export default function Reports() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReports, setSelectedReports] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedReason, setSelectedReason] = useState("");
 
   const dispatch = useDispatch();
   const { reports, loading, error } = useSelector((state) => state.report);
 
   // Use mock data for now, replace with real data when API is ready
-  const [useRealData, setUseRealData] = useState(false);
+  const [useRealData, setUseRealData] = useState(true);
   const dataSource = useRealData ? reports : mockReportData;
 
   const fetchReports = async () => {
@@ -272,11 +273,15 @@ export default function Reports() {
       setCurrentPage(currentPage - 1);
     }
   };
-
   const handleNextPage = () => {
     if (currentPage < totalPages - 1) {
       setCurrentPage(currentPage + 1);
     }
+  };
+
+  const showReasonModal = (reason) => {
+    setSelectedReason(reason);
+    setModalVisible(true);
   };
 
   const containerVariants = {
@@ -408,13 +413,13 @@ export default function Reports() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     Post ID
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center justify-center">
                       Reason
@@ -426,7 +431,7 @@ export default function Reports() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center justify-center">
                       Status
@@ -438,9 +443,8 @@ export default function Reports() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                  >
-                    <div className="flex items-center justify-center">
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                  >                    <div className="flex items-center justify-center">
                       Created At
                       <ChevronDown
                         size={16}
@@ -450,9 +454,9 @@ export default function Reports() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
-                    <div className="flex justify-center">Action</div>
+                    Details
                   </th>
                 </tr>
               </thead>
@@ -463,7 +467,7 @@ export default function Reports() {
                     variants={itemVariants}
                     className="hover:bg-gray-50 transition-colors h-[7.5vh]"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <input
                           type="checkbox"
@@ -476,55 +480,37 @@ export default function Reports() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {report.post_id}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </td>                    <td className="px-4 py-4">
                       <div
-                        className="text-sm text-gray-900 max-w-xs truncate"
+                        className="text-sm text-gray-900 max-w-lg truncate"
                         title={report.reason}
                       >
                         {report.reason}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <ReportStatusBadge status={report.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-sm text-gray-500">
                         {formatDate(report.created_at)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="View Report"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                          onClick={() => handleEditReport(report.id, {})}
-                          title="Edit Report"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          onClick={() => handleDeleteReport(report.id)}
-                          title="Delete Report"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => showReasonModal(report.reason)}
+                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors inline-flex items-center"
+                        title="View Full Details"
+                      >
+                        <ChevronRightIcon className="w-5 h-5" />
+                      </button>
                     </td>
                   </motion.tr>
-                ))}
-
-                {/* Empty rows to maintain consistent table height */}
+                ))}                {/* Empty rows to maintain consistent table height */}
                 {Array.from({
                   length:
                     itemsPerPage -
@@ -595,11 +581,31 @@ export default function Reports() {
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+              </button>            </div>
           </div>
         </div>
       </div>
+
+      {/* Modal for full reason display */}
+      <Modal
+        title="Report Reason"
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        footer={[
+          <button
+            key="close"
+            onClick={() => setModalVisible(false)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Close
+          </button>
+        ]}
+        width={600}
+      >
+        <div className="max-h-[60vh] overflow-y-auto p-4 border rounded-md bg-gray-50">
+          <p className="text-gray-800 whitespace-pre-wrap">{selectedReason}</p>
+        </div>
+      </Modal>
     </div>
   );
 }

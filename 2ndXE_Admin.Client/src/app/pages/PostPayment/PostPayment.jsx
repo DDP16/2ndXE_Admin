@@ -147,7 +147,7 @@ export default function PostPayment() {
   const { postPayments, loading, error } = useSelector((state) => state.postPayment);
 
   // Use mock data for now, replace with real data when API is ready
-  const [useRealData, setUseRealData] = useState(false);
+  const [useRealData, setUseRealData] = useState(true);
   const dataSource = useRealData ? postPayments : mockPostPaymentData;
 
   const fetchPostPayments = async () => {
@@ -373,10 +373,10 @@ export default function PostPayment() {
                     className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center justify-center">
-                      Display Duration (Days)
+                      Duration (Days)
                       <ChevronDown
                         size={16}
-                        className="inline ml-3 text-gray-400"
+                        className="inline ml-1 text-gray-400"
                       />
                     </div>
                   </th>
