@@ -48,7 +48,7 @@ const ProfitChart = () => {
         </div>
       </div>
 
-      <div className="h-80">
+      <div className="h-100">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={data}

@@ -6,13 +6,20 @@ export const fetchAllPost = createAsyncThunk(
         try {
             let { data: VehiclePost, error } = await supabase
                 .from('VehiclePost')
-                .select('id, title, description, brand, model, year, mileage, price, imageURL, location, expire_at, status')
+                .select('id, title, description, brand, model, year, mileage, price, image_urls, location, expire_at, status')
 
             if (error) {
                 throw error;
             }
-            console.log("Fetched posts:", VehiclePost);
-            return VehiclePost;
+            
+            // Map image_urls to imageURL for consistent usage in components
+            const formattedPosts = VehiclePost.map(post => ({
+                ...post,
+                imageURL: post.image_urls || []
+            }));
+            
+            console.log("Fetched posts:", formattedPosts);
+            return formattedPosts;
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -24,14 +31,22 @@ export const fetchPostById = createAsyncThunk(
         try {
             let { data: VehiclePost, error } = await supabase
                 .from('VehiclePost')
-                .select('*')
+                .select('id, title, description, brand, model, year, mileage, price, image_urls, location, expire_at, status, user_id, created_at, vehicle_type, engine_capacity, transmission, fuel_type, features')
                 .eq('id', id)
+                .single();  // Use single() to return the first item directly rather than an array
 
             if (error) {
                 throw error;
             }
-            console.log("Fetched post:", VehiclePost);
-            return VehiclePost;
+            
+            // Format the post data to ensure consistent field naming
+            const formattedPost = {
+                ...VehiclePost,
+                imageURL: VehiclePost.image_urls || []
+            };
+            
+            console.log("Fetched post:", formattedPost);
+            return formattedPost;
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -78,6 +93,7 @@ export const deletePost = createAsyncThunk(
 
 const initialState = {
     postItems: [],
+    currentPost: null,
     state: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
 };
@@ -103,10 +119,9 @@ const postSlice = createSlice({
             .addCase(fetchPostById.pending, (state) => {
                 state.state = "loading";
                 state.error = null;
-            })
-            .addCase(fetchPostById.fulfilled, (state, action) => {
+            })            .addCase(fetchPostById.fulfilled, (state, action) => {
                 state.state = "succeeded";
-                state.postItems = action.payload;
+                state.currentPost = action.payload;
             })
             .addCase(fetchPostById.rejected, (state, action) => {
                 state.state = "failed";

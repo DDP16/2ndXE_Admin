@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LOCAL_EMAIL } from "../../../settings/localVar";
 import { signInWithEmail } from "./services/signInWithEmail";
+import { logout } from "./services/logout";
 import { useDispatch } from "react-redux";
+import { fetchAccountByAuthId } from "../../modules/services/Account";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -21,6 +23,20 @@ export default function Login() {
 
   const from = location.state?.from?.pathname || "/app/home";
 
+  // Helper function to check if user has admin role
+  const checkAdminAccess = (userData) => {
+    if (!userData || userData.role !== "admin") {
+      // Clear all stored data
+      dispatch(logout());
+
+      // Set error message
+      setError("Access denied. Admin privileges required.");
+      console.error("Non-admin user attempted to login:", userData);
+      return false;
+    }
+    return true;
+  };
+
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +46,6 @@ export default function Login() {
       setTimeout(() => setError(""), 5000);
       return;
     }
-
     try {
       console.log("Submitting login with:", email, password);
 
@@ -38,21 +53,80 @@ export default function Login() {
         signInWithEmail({ email, password })
       ).unwrap();
       console.log("Login successful:", result);
+      try {
+        const userInformation = await dispatch(
+          fetchAccountByAuthId(result.user.id)
+        ).unwrap();
+        console.log("User information fetched:", userInformation);
 
-      // Navigate to the desired page after successful login
+        // Check if the user has admin role
+        if (!checkAdminAccess(userInformation)) {
+          return; // Stop the login process for non-admin users
+        }
+
+        // Store user data for admin user
+        localStorage.setItem("user_data", JSON.stringify(userInformation));
+      } catch (userInfoError) {
+        console.warn("Could not fetch user information:", userInfoError);
+      }
+
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
-      setError(error || "Login failed. Please try again.");
+
+      let errorMessage = "Login failed. Please check your email and password.";
+      if (
+        error &&
+        typeof error === "string" &&
+        error.includes("JSON object requested")
+      ) {
+        // Try to continue with login if it's just a profile loading issue
+        try {
+          // Get the user ID from localStorage (set during signInWithEmail)
+          const userId = localStorage.getItem("LOCAL_USER_ID");
+          if (userId) {
+            const userInformation = await dispatch(
+              fetchAccountByAuthId(userId)
+            ).unwrap();
+
+            // Check if the user has admin role
+            if (!checkAdminAccess(userInformation)) {
+              return; // Stop the login process for non-admin users
+            }
+
+            // User is an admin, continue with login
+            localStorage.setItem("user_data", JSON.stringify(userInformation));
+            navigate("/");
+            return;
+          } else {
+            errorMessage =
+              "Authentication successful, but there was an issue loading your profile.";
+            navigate("/");
+            return;
+          }
+        } catch (secondAttemptError) {
+          // If second attempt also fails, still try to navigate but with warning
+          console.warn(
+            "Second attempt to load profile failed:",
+            secondAttemptError
+          );
+          errorMessage =
+            "Authentication successful, but there was an issue loading your profile.";
+          navigate("/");
+          return;
+        }
+      }
+
+      setError(errorMessage);
       setTimeout(() => setError(""), 5000);
     }
   };
 
   const handleEnterPress = (e) => {
-    if(e.key === 'Enter'){
+    if (e.key === "Enter") {
       handleSubmit(e);
     }
-  }
+  };
 
   return (
     <div className="w-full h-screen">
@@ -91,16 +165,12 @@ export default function Login() {
             <h1 className="text-center text-primary text-2xl font-bold py-4">
               Đăng nhập
             </h1>
-          </div>
-
+          </div>{" "}
           {error && (
             <div className="w-full bg-red-100 border rounded-lg border-red-400 text-red-700 px-4 py-3 relative mb-4">
-              <span className="block sm:inline">
-                Email or password is incorrect
-              </span>
+              <span className="block sm:inline">{error}</span>
             </div>
           )}
-
           <div className="w-full mb-4 max-w-[400px]">
             <label
               htmlFor="email"
@@ -116,7 +186,6 @@ export default function Login() {
               onKeyPress={handleEnterPress}
             />
           </div>
-
           <div className="w-full mb-4 max-w-[400px]">
             <label
               htmlFor="password"
@@ -133,7 +202,6 @@ export default function Login() {
               onKeyPress={handleEnterPress}
             />
           </div>
-
           <div className="self-start flex items-center mb-4">
             <input
               type="checkbox"
@@ -148,7 +216,6 @@ export default function Login() {
               Hiện mật khẩu
             </label>
           </div>
-
           <button
             onClick={handleSubmit}
             className="w-full mt-4 bg-primary text-white py-2 px-4 rounded-2xl  hover:scale-102 hover:shadow-lg hover:shadow-gray-400 active:scale-90 transition-all duration-300 font-medium text-base"

@@ -12,13 +12,12 @@ export const logout = createAsyncThunk(
         throw error;
       }
       
-      console.log("Logout successful");
-      // Clear all local storage items
+      console.log("Logout successful");      // Clear all local storage items
       localStorage.removeItem(LOCAL_EMAIL);
       localStorage.removeItem(LOCAL_USER_ID);
       localStorage.removeItem(LOCAL_PASSWORD_HASH);
       localStorage.removeItem(LOCAL_PASSWORD_SALT);
-      // localStorage.removeItem("user_data");
+      localStorage.removeItem("user_data");
       
       return { success: true };
     } catch (error) {

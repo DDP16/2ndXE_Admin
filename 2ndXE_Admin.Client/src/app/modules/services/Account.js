@@ -29,9 +29,39 @@ export const fetchAccountById = createAsyncThunk(
                 .single();
 
             if (error) throw error;
-
+            
             return data;
         } catch (error) {
+            console.error("Error fetching account by ID:", error);
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const fetchAccountByAuthId = createAsyncThunk(
+    "account/fetchAccountByAuthId", async (id, { rejectWithValue }) => {
+        try {
+            // First try to get the user with the exact ID
+            let { data, error } = await supabase
+                .from("User")
+                .select("*")
+                .eq("auth_id", id);
+
+            if (error) throw error;
+            
+            // If no data or multiple rows, handle accordingly
+            if (!data || data.length === 0) {
+                return rejectWithValue("User not found");
+            }
+            
+            // If multiple users found, return the first one
+            if (data.length > 1) {
+                console.warn(`Multiple users found with ID ${id}, using the first one`);
+            }
+            
+            return data[0]; // Return the first (or only) user found
+        } catch (error) {
+            console.error("Error fetching account by ID:", error);
             return rejectWithValue(error.message);
         }
     }
@@ -144,9 +174,21 @@ const accountSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchAccountById.fulfilled, (state, action) => {
+                state.loading = false;
                 state.account = action.payload;
             })
             .addCase(fetchAccountById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchAccountByAuthId.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAccountByAuthId.fulfilled, (state, action) => {
+                state.account = action.payload;
+            })
+            .addCase(fetchAccountByAuthId.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

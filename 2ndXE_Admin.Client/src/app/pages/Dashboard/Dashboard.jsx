@@ -7,7 +7,7 @@ import Header from "../../layouts/Header";
 const Dashboard = () => {
   return (
     <div className="flex-1 p-2">
-      <div className="p-4 overflow-y-auto max-h-[90vh]">
+      <div className="p-4 overflow-y-auto max-h-[98vh]">
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

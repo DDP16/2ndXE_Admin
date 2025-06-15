@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { User, Shield, Info } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { verifyUserPassword } from "../../utils/authUtils";
-import { changeAccountPassword } from "../../modules/services/Account";
+import { changeAccountPassword, updateAccount } from "../../modules/services/Account";
 
 export default function Settings() {
   const dispatch = useDispatch();
@@ -25,32 +25,91 @@ export default function Settings() {
   
   // Password loading state
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-
   const [userProfile, setUserProfile] = useState({
-    name: "Moni Roy",
-    email: "moniroy@example.com",
-    role: "Admin",
+    full_name: "",
+    email: "",
+    role: "",
     avatar: "https://robohash.org/04adc2533b0e126d2971e205a7e2c611?set=set4&bgset=&size=400x400",
-    bio: "Product Manager with 5+ years of experience in tech industry.",
-    phone: "+1 (555) 123-4567",
-    company: "2ndXE",
-    location: "San Francisco, CA",
+    phone: "",
   });
 
   const {user, isAuthenticated, error, state} = useSelector((state) => state.login);
+  
+  // Load user data from localStorage
   useEffect(() => {
-    console.log("User data:", user);
-  },[user]);
+    try {
+      const userData = localStorage.getItem("user_data");
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        setUserProfile({
+          full_name: parsedUserData.full_name || "",
+          email: parsedUserData.email || "",
+          role: parsedUserData.role || "",
+          avatar: parsedUserData.avatar_url || "https://robohash.org/04adc2533b0e126d2971e205a7e2c611?set=set4&bgset=&size=400x400",
+          phone: parsedUserData.phone || "",
+        });
+        
+        // Set form data with user profile
+        setFormData({
+          full_name: parsedUserData.full_name || "",
+          email: parsedUserData.email || "",
+          role: parsedUserData.role || "",
+          avatar: parsedUserData.avatar_url || "https://robohash.org/04adc2533b0e126d2971e205a7e2c611?set=set4&bgset=&size=400x400",
+          phone: parsedUserData.phone || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading user data from localStorage:", error);
+      toast.error("Failed to load user data");
+    }
+  }, []);
 
   // Form state
   const [formData, setFormData] = useState({ ...userProfile });
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("profile");
+  // Form loading state
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  // Helper function to get user ID from various sources
+  const getUserId = () => {
+    try {
+      // Try to get from localStorage user_data
+      const userData = localStorage.getItem("user_data");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        if (parsedData && parsedData.id) {
+          return parsedData.id;
+        }
+      }
+      
+      // Try to get from user in Redux store
+      if (user && user.id) {
+        return user.id;
+      }
+      
+      // Try to get from localStorage userId directly
+      const userId = localStorage.getItem("userId") || localStorage.getItem("LOCAL_USER_ID");
+      if (userId) {
+        return userId;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error getting user ID:", error);
+      return null;
+    }
+  };
 
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Prevent changes to email and role
+    if (name === 'email' || name === 'role') {
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -77,12 +136,64 @@ export default function Settings() {
       }));
     }
   };
-
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setUserProfile({ ...formData });
-    toast.success("Profile updated successfully!");
+    setIsUpdatingProfile(true);
+    
+    try {
+      // Get user data from localStorage
+      const userData = localStorage.getItem("user_data");
+      if (!userData) {
+        toast.error("User data not found");
+        setIsUpdatingProfile(false);
+        return;
+      }
+      
+      const parsedUserData = JSON.parse(userData);
+      const userId = parsedUserData.id;
+      
+      if (!userId) {
+        toast.error("User ID not found");
+        setIsUpdatingProfile(false);
+        return;
+      }
+      
+      // Create updated data object (excluding email and role)
+      const updatedData = {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        email: parsedUserData.email,
+        role: parsedUserData.role,
+      };
+      
+      // Dispatch update action
+      const result = await dispatch(updateAccount({
+        id: userId,
+        updatedData: updatedData
+      }));
+      
+      if (result.error) {
+        toast.error("Failed to update profile: " + result.error.message);
+      } else {
+        // Update local state
+        setUserProfile({ ...formData });
+        
+        // Update localStorage
+        const updatedUserData = {
+          ...parsedUserData,
+          ...updatedData
+        };
+        localStorage.setItem("user_data", JSON.stringify(updatedUserData));
+        
+        toast.success("Profile updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("An error occurred while updating profile");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
   };
   
   // Handle password update
@@ -130,9 +241,14 @@ export default function Settings() {
         setIsChangingPassword(false);
         return;
       }
+        // Update password in the backend
+      const userId = getUserId();
       
-      // Update password in the backend
-      const userId = user?.id || localStorage.getItem("userId");
+      if (!userId) {
+        toast.error("User ID not found. Cannot update password.");
+        setIsChangingPassword(false);
+        return;
+      }
       
       const result = await dispatch(changeAccountPassword({
         id: userId,
@@ -209,10 +325,11 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Profile Tab Content */}
+        {/* Profile Tab Content 
+        fullname email phone role*/}
         {activeTab === "profile" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 bg-white rounded-lg border shadow-sm p-4 flex flex-col my-20">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-h-[85vh]">
+            <div className="md:col-span-1 bg-white rounded-lg border shadow-sm p-4 flex flex-col ">
               <div className="mb-4">
                 <h3 className="text-xl font-semibold">Profile Picture</h3>
                 <p className="text-sm text-gray-500">
@@ -254,8 +371,8 @@ export default function Settings() {
                       </label>
                       <input
                         id="name"
-                        name="name"
-                        value={formData.name}
+                        name="full_name"
+                        value={formData.full_name}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
@@ -269,11 +386,11 @@ export default function Settings() {
                       </label>
                       <input
                         id="email"
-                        name="email"
-                        type="email"
+                        name="email"                        type="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
                       />
                     </div>
                     <div className="space-y-2">
@@ -287,36 +404,6 @@ export default function Settings() {
                         id="phone"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="location"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Location
-                      </label>
-                      <input
-                        id="location"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="company"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Company
-                      </label>
-                      <input
-                        id="company"
-                        name="company"
-                        value={formData.company}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
@@ -338,22 +425,6 @@ export default function Settings() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="bio"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Bio
-                    </label>
-                    <textarea
-                      id="bio"
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
                 </div>
                 <div className="px-6 py-4 border-t bg-gray-50 flex justify-between rounded-b-lg">
                   <button
@@ -362,12 +433,12 @@ export default function Settings() {
                     onClick={() => setFormData({ ...userProfile })}
                   >
                     Cancel
-                  </button>
-                  <button
+                  </button>                  <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isUpdatingProfile}
                   >
-                    Save Changes
+                    {isUpdatingProfile ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>
