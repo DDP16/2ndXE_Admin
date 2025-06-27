@@ -173,16 +173,16 @@ export default function PostCard({ post, onEdit = "", onDelete = "" }) {
             </p>
             <p
               className={`text-sm text-gray-500 ${
-                post.expire_at ? "" : "text-red-500 font-semibold"
+                post.expire_at && new Date(post.expire_at) > new Date() ? "" : "text-red-500 font-semibold"
               }`}
             >
-              {post.expire_at
+              {post.expire_at && new Date(post.expire_at) > new Date()
                 ? Math.ceil(
                     (new Date(post.expire_at) - new Date()) /
                       (1000 * 60 * 60 * 24)
                   )
                 : 0}
-              days left
+              {" days left"}
             </p>
           </div>
         </div>

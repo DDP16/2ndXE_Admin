@@ -350,12 +350,6 @@ export default function PostPayment() {
                 <tr>
                   <th scope="col" className="ps-4 py-3 text-left">
                     <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        checked={selectedPayments.length === dataSource.length && dataSource.length > 0}
-                        onChange={toggleSelectAll}
-                      />
                       <span className="ml-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Post ID
                       </span>
@@ -385,7 +379,7 @@ export default function PostPayment() {
                     className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center justify-center">
-                      Total Price ($)
+                      Total Price (VND)
                       <ChevronDown
                         size={16}
                         className="inline ml-3 text-gray-400"
@@ -443,12 +437,6 @@ export default function PostPayment() {
                     >
                       <td className="ps-4 py-2 whitespace-nowrap">
                         <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            checked={selectedPayments.includes(payment.id)}
-                            onChange={() => toggleSelectPayment(payment.id)}
-                          />
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
                               {payment.post_id}
@@ -463,7 +451,7 @@ export default function PostPayment() {
                         {payment.display_duration} days
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-sm text-center font-medium">
-                        ${payment.total_price.toFixed(2)}
+                        {payment.total_price.toFixed(0)} VND
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-center">
                         <PaymentStatusBadge status={payment.status} />

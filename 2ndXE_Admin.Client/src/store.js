@@ -4,6 +4,7 @@ import accountReducer from "./app/modules/services/Account";
 import postPaymentReducer from "./app/modules/services/PostPayment";
 import loginReducer from "./app/pages/Login/loginStore";
 import reportReducer from "./app/modules/services/Report";
+import dashboardReducer from "./app/modules/services/Dashboard";
 
 export const store = configureStore({
     reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
         postPayment: postPaymentReducer,
         login: loginReducer,
         report: reportReducer,
+        dashboard: dashboardReducer,
     }
 });

@@ -6,12 +6,10 @@ import {
   ChevronRight,
   Search,
   ChevronDown,
-  Eye,
   Pencil,
-  Trash2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { message, Spin } from "antd";
+import { message, Spin, Modal, Select, Button } from "antd";
 import {
   fetchAllAccount,
   updateAccount,
@@ -84,6 +82,9 @@ export default function Accounts() {
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [filterRole, setFilterRole] = useState("");
   const [filterVerified, setFilterVerified] = useState("");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [currentAccount, setCurrentAccount] = useState(null);
+  const [newRole, setNewRole] = useState("");
 
   const dispatch = useDispatch();
   const { accounts, loading, error } = useSelector((state) => state.account);
@@ -120,6 +121,37 @@ export default function Accounts() {
         "Failed to delete account: " + (err.message || "Unknown error")
       );
     }
+  };
+
+  const openEditModal = (account) => {
+    setCurrentAccount(account);
+    setNewRole(account.role);
+    setEditModalVisible(true);
+  };
+
+  const handleRoleUpdate = async () => {
+    if (!currentAccount || !newRole) return;
+
+    try {
+      await dispatch(
+        updateAccount({
+          id: currentAccount.id,
+          updatedData: { role: newRole.toLowerCase() },
+        })
+      ).unwrap();
+
+      message.success("Account role updated successfully!");
+      setEditModalVisible(false);
+      await fetchAccounts();
+    } catch (err) {
+      message.error("Failed to update role: " + (err.message || "Unknown error"));
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModalVisible(false);
+    setCurrentAccount(null);
+    setNewRole("");
   };
 
   useEffect(() => {
@@ -288,7 +320,7 @@ export default function Accounts() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                   >
                     Phone
                   </th>
@@ -403,11 +435,12 @@ export default function Accounts() {
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap">
                         <div className="flex space-x-2 justify-center">
-                          <button className="text-gray-400 hover:text-gray-600 active:scale-70 transition-all duration-100">
+                          <button 
+                            className="text-gray-400 hover:text-blue-600 active:scale-70 transition-all duration-100"
+                            onClick={() => openEditModal(account)}
+                            title="Edit Role"
+                          >
                             <Pencil size={16} />
-                          </button>
-                          <button className="text-gray-400 hover:text-gray-600 active:scale-70 transition-all duration-100">
-                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -463,6 +496,55 @@ export default function Accounts() {
           </div>
         </div>
       )}
+
+      {/* Edit Role Modal */}
+      <Modal
+        title="Edit Account Role"
+        open={editModalVisible}
+        onCancel={handleCancelEdit}
+        footer={null}
+        centered
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Account:
+            </label>
+            <div className="text-gray-900 font-semibold">
+              {currentAccount?.full_name}
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Role:
+            </label>
+            <Select
+              value={newRole}
+              onChange={(value) => setNewRole(value)}
+              className="w-full"
+              placeholder="Select a role"
+            >
+              <Select.Option value="Admin">Admin</Select.Option>
+              <Select.Option value="User">User</Select.Option>
+            </Select>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              onClick={handleCancelEdit}
+              className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleRoleUpdate}
+              loading={loading}
+            >
+              Update Role
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

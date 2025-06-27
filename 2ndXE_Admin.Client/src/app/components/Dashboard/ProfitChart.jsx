@@ -9,22 +9,31 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const data = [
-  { name: '5', value: 20 },
-  { name: '10', value: 30 },
-  { name: '15', value: 45 },
-  { name: '20', value: 35 },
-  { name: '25', value: 47 },
-  { name: '30', value: 60 },
-  { name: '35', value: 100 },
-  { name: '40', value: 40 },
-  { name: '45', value: 45 },
-  { name: '50', value: 70 },
-  { name: '55', value: 65 },
-  { name: '60', value: 75 },
+// Dữ liệu mẫu dùng khi không có dữ liệu thực từ props
+const sampleData = [
+  { name: '2', value: 20 },
+  { name: '4', value: 30 },
+  { name: '6', value: 45 },
+  { name: '8', value: 35 },
+  { name: '10', value: 47 },
+  { name: '12', value: 60 },
+  { name: '14', value: 100 },
+  { name: '16', value: 40 },
+  { name: '18', value: 45 },
+  { name: '20', value: 70 },
+  { name: '22', value: 65 },
+  { name: '24', value: 75 },
+  { name: '26', value: 30 },
+  { name: '28', value: 45 },
+  { name: '30', value: 35 },
 ];
 
-const ProfitChart = () => {
+const ProfitChart = ({ data = sampleData, loading = false }) => {
+  const chartData = data && data.length > 0 ? data : sampleData;
+  
+  // Lấy tháng hiện tại
+  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+  
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -36,9 +45,7 @@ const ProfitChart = () => {
         <h2 className="text-xl font-semibold">Profit Details</h2>
         <div className="relative">
           <select className="appearance-none bg-gray-100 px-4 py-1 pr-8 rounded-md text-gray-600 text-sm border border-gray-200">
-            <option>October</option>
-            <option>November</option>
-            <option>December</option>
+            <option>{currentMonth}</option>
           </select>
           <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
             <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,9 +56,9 @@ const ProfitChart = () => {
       </div>
 
       <div className="h-100">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <AreaChart
-            data={data}
+            data={chartData}
             margin={{
               top: 10,
               right: 30,
@@ -75,10 +82,9 @@ const ProfitChart = () => {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 10, fill: '#888' }}
-              tickFormatter={(value) => `${value}%`}
             />
             <Tooltip 
-              formatter={(value) => [`$${value * 1000}`, 'Value']}
+              formatter={(value) => [`${value} VND`, 'Revenue']}
               labelFormatter={(label) => `Day ${label}`}
               contentStyle={{
                 backgroundColor: 'white',
